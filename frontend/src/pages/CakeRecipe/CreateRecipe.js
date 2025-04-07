@@ -17,6 +17,10 @@ const CreateRecipeForm = () => {
     date: new Date().toLocaleDateString('en-US')
   });
 
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+
   const cakeTypes = [
     'Birthday cake',
     'Anniversary cake',
@@ -33,9 +37,68 @@ const CreateRecipeForm = () => {
     }));
   };
 
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleImageChange({ target: { files: e.dataTransfer.files } });
+    }
+  };
+
+  const handleImageChange = (e) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      
+      // Filter only image files
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      
+      // Limit to 4 images
+      const selectedFiles = imageFiles.slice(0, 4 - images.length);
+      
+      // Create previews
+      const previews = selectedFiles.map(file => URL.createObjectURL(file));
+      
+      setImages([...images, ...selectedFiles]);
+      setImagePreviews([...imagePreviews, ...previews]);
+    }
+  };
+
+  const removeImage = (index) => {
+    const newImages = [...images];
+    const newPreviews = [...imagePreviews];
+    
+    // Revoke the object URL to avoid memory leaks
+    URL.revokeObjectURL(newPreviews[index]);
+    
+    newImages.splice(index, 1);
+    newPreviews.splice(index, 1);
+    
+    setImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    const formDataWithImages = {
+      ...formData,
+      images: images
+    };
+    console.log('Form submitted:', formDataWithImages);
     // Here you would typically send data to your backend
   };
 
@@ -47,13 +110,13 @@ const CreateRecipeForm = () => {
             max-width: 800px;
             margin: 2rem auto;
             padding: 2rem;
-            background: #fff9f9;
+            background: #f5f9ff;
             border-radius: 15px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
           }
           
           .form-header {
-            color: #d23c77;
+            color: #2a5bd7;
             text-align: center;
             margin-bottom: 2rem;
             font-weight: 700;
@@ -70,14 +133,14 @@ const CreateRecipeForm = () => {
           }
           
           .form-section h3 {
-            color: #d23c77;
-            border-bottom: 2px solid #ffd6e7;
+            color: #2a5bd7;
+            border-bottom: 2px solid #d6e4ff;
             padding-bottom: 0.5rem;
             margin-bottom: 1.5rem;
           }
           
           .submit-btn {
-            background: #d23c77;
+            background: #2a5bd7;
             border: none;
             padding: 10px 25px;
             font-size: 1.1rem;
@@ -87,27 +150,145 @@ const CreateRecipeForm = () => {
           }
           
           .submit-btn:hover {
-            background: #b52e63;
+            background: #1e4ac4;
             transform: translateY(-2px);
           }
           
           .form-control:focus, .form-select:focus {
-            border-color: #d23c77;
-            box-shadow: 0 0 0 0.25rem rgba(210, 60, 119, 0.25);
+            border-color: #2a5bd7;
+            box-shadow: 0 0 0 0.25rem rgba(42, 91, 215, 0.25);
           }
           
           textarea.form-control {
             min-height: 120px;
           }
+
+          /* New Image Upload Styles */
+          .upload-area {
+            border: 2px dashed ${isDragging ? '#2a5bd7' : '#d3d3d3'};
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: ${isDragging ? '#f0f5ff' : '#f8faff'};
+            transition: all 0.3s ease;
+            cursor: pointer;
+          }
+
+          .upload-area:hover {
+            border-color: #2a5bd7;
+            background: #f0f5ff;
+          }
+
+          .upload-icon {
+            font-size: 48px;
+            color: #2a5bd7;
+            margin-bottom: 15px;
+          }
+
+          .upload-text {
+            margin-bottom: 15px;
+          }
+
+          .upload-text h5 {
+            color: #2a5bd7;
+            font-weight: 600;
+          }
+
+          .upload-text p {
+            color: #666;
+            font-size: 14px;
+          }
+
+          .browse-btn {
+            background: #2a5bd7;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+          }
+
+          .browse-btn:hover {
+            background: #1e4ac4;
+          }
+
+          .file-input {
+            display: none;
+          }
+
+          .image-previews {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+          }
+
+          .preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            aspect-ratio: 1/1;
+          }
+
+          .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+          }
+
+          .upload-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+          }
+
+          .upload-count {
+            font-weight: 600;
+            color: #2a5bd7;
+          }
+
+          .max-files {
+            color: #999;
+          }
+
+          @media (max-width: 576px) {
+            .image-previews {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
         `}
       </style>
 
-      <h1 className="form-header">Create Cake Recipe Form</h1>
+      <h1 className="form-header">Create New Cake Recipe</h1>
       
       <form onSubmit={handleSubmit}>
         <div className="form-section">
           <div className="row mb-3">
-            <div className="col-md-6">
+            <div className="col-md-12">
               <label htmlFor="authorName" className="form-label">Author Name</label>
               <input 
                 type="text" 
@@ -119,6 +300,9 @@ const CreateRecipeForm = () => {
                 required
               />
             </div>
+          </div>
+          
+          <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="cakeName" className="form-label">Cake Name</label>
               <input 
@@ -131,9 +315,6 @@ const CreateRecipeForm = () => {
                 required
               />
             </div>
-          </div>
-          
-          <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="subTitle" className="form-label">Sub Title</label>
               <input 
@@ -145,6 +326,9 @@ const CreateRecipeForm = () => {
                 onChange={handleChange}
               />
             </div>
+          </div>
+
+          <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="cakeType" className="form-label">Cake Type</label>
               <select
@@ -160,13 +344,7 @@ const CreateRecipeForm = () => {
                 ))}
               </select>
             </div>
-          </div>
-        </div>
-        
-        <div className="form-section">
-          <h3>How to Make</h3>
-          <div className="row">
-            <div className="col-md-4 mb-3">
+            <div className="col-md-6">
               <label htmlFor="skillLevel" className="form-label">Skill Level</label>
               <select 
                 className="form-select" 
@@ -181,6 +359,9 @@ const CreateRecipeForm = () => {
                 <option value="Advanced">Advanced</option>
               </select>
             </div>
+          </div>
+
+          <div className="row mb-3">
             <div className="col-md-4 mb-3">
               <label htmlFor="prepTime" className="form-label">Prep Time</label>
               <input 
@@ -205,10 +386,7 @@ const CreateRecipeForm = () => {
                 onChange={handleChange}
               />
             </div>
-          </div>
-          
-          <div className="row">
-            <div className="col-md-6 mb-3">
+            <div className="col-md-4 mb-3">
               <label htmlFor="servings" className="form-label">Servings</label>
               <input 
                 type="number" 
@@ -219,21 +397,71 @@ const CreateRecipeForm = () => {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="servingSize" className="form-label">Serving Size</label>
-              <input 
-                type="text" 
-                className="form-control" 
-                id="servingSize" 
-                name="servingSize"
-                placeholder="e.g. 1 slice"
-                value={formData.servingSize}
-                onChange={handleChange}
-              />
-            </div>
           </div>
         </div>
 
+        {/* Updated Image Upload Section */}
+        <div className="form-section">
+          <h3>Cake Images</h3>
+          <div 
+            className="upload-area"
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('cakeImages').click()}
+          >
+            <div className="upload-icon">
+              <i className="bi bi-cloud-arrow-up"></i>
+            </div>
+            <div className="upload-text">
+              <h5>Drag & Drop your images here</h5>
+              <p>or click to browse files</p>
+            </div>
+            <button type="button" className="browse-btn">
+              Select Images
+            </button>
+            <input
+              type="file"
+              id="cakeImages"
+              className="file-input"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              disabled={images.length >= 4}
+            />
+          </div>
+
+          <div className="upload-status">
+            <div className="upload-count">
+              {images.length} {images.length === 1 ? 'image' : 'images'} selected
+            </div>
+            <div className="max-files">
+              Max 4 images allowed
+            </div>
+          </div>
+
+          {imagePreviews.length > 0 && (
+            <div className="image-previews">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="preview-item">
+                  <img src={preview} alt={`Preview ${index + 1}`} />
+                  <button 
+                    type="button" 
+                    className="remove-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage(index);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
         <div className="form-section">
           <h3>Ingredients</h3>
           <div className="mb-3">
@@ -247,11 +475,11 @@ const CreateRecipeForm = () => {
               value={formData.ingredients}
               onChange={handleChange}
               placeholder="Example:
-2 cups all-purpose flour
-1 cup sugar
-3 eggs
-1 cup milk
-..."
+                2 cups all-purpose flour
+                1 cup sugar
+                3 eggs
+                1 cup milk
+                ..."
               rows="6"
             />
           </div>
@@ -270,10 +498,10 @@ const CreateRecipeForm = () => {
               value={formData.instructions}
               onChange={handleChange}
               placeholder="Example:
-1. Preheat oven to 350°F (175°C)
-2. Mix dry ingredients in a large bowl
-3. Add wet ingredients and mix well
-..."
+                1. Preheat oven to 350°F (175°C)
+                2. Mix dry ingredients in a large bowl
+                3. Add wet ingredients and mix well
+                ..."
               rows="8"
             />
           </div>
@@ -283,7 +511,7 @@ const CreateRecipeForm = () => {
           <div className="text-muted">
             <small>Date: {formData.date}</small>
           </div>
-          <button type="submit" className="btn submit-btn">
+          <button type="submit" className="btn submit-btn text-white">
             Add Cake Recipe
           </button>
         </div>
