@@ -1,5 +1,4 @@
 import React from 'react';
-//import logo from './images/logo.jpg'; // Adjust the path to your logo image
 import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
@@ -10,7 +9,6 @@ function Header() {
       <div className="container-fluid">
         {/* Company Logo and Name */}
         <Link className="navbar-brand d-flex align-items-center" to="/">
-          {/*<img src={logo} alt="Company Logo" style={{ height: '55px' }} />*/}
           <span className="ms-2" style={{ fontSize: '1.4rem', fontWeight: 'bold' }}> Cake Crafters</span>
         </Link>
 
@@ -29,7 +27,6 @@ function Header() {
 
         {/* Navbar Content */}
         <div className="collapse navbar-collapse" id="navbarNav">
-
           {/* Centered Search Bar */}
           <div className="mx-auto d-flex">
             <form className="d-flex">
@@ -38,7 +35,7 @@ function Header() {
                 type="search"
                 placeholder="Search"
                 aria-label="Search"
-                style={{ width: '320px' }} // Adjust the width here
+                style={{ width: '320px' }}
               />
               <button className="btn btn-outline-light" type="submit">Search</button>
             </form>
