@@ -14,7 +14,7 @@ function Navbar() {
               <Link className="nav-link" to="/create-post">Create Post</Link>
             </li>
             <li className="nav-item mx-3">
-              <Link className="nav-link" to="/">Cake Recipe</Link>
+              <Link className="nav-link" to="/cakerecipe">Cake Recipe</Link>
             </li>
           </ul>
         </div>

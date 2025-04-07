@@ -7,6 +7,7 @@ import Navbar from './components/Navbar'; // Corrected path: './components/Navba
 
 import Header from './components/Header';
 import Footer from './components/Footer';
+import CakeRecipe from './pages/CakeRecipe/CakeRecipe';
 import CreateRecipe from './pages/CakeRecipe/CreateRecipe';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Route path="/posts/:id" element={<PostDetail />} />
             <Route path="/create-post" element={<CreatePost />} />
 
+            <Route path="/cakerecipe" element={<CakeRecipe />} />
             <Route path="/createrecipe" element={<CreateRecipe />} />
           </Routes>
         </div>
