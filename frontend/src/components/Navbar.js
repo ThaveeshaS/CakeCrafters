@@ -5,14 +5,16 @@ function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
       <div className="container">
-        <Link className="navbar-brand" to="/">cakecrafters</Link>
-        <div className="collapse navbar-collapse">
-          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link className="nav-link" to="/">home</Link>
+        <div className="collapse navbar-collapse d-flex justify-content-center">
+          <ul className="navbar-nav">
+            <li className="nav-item mx-3">
+              <Link className="nav-link" to="/">Home</Link>
             </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/create-post">create post</Link>
+            <li className="nav-item mx-3">
+              <Link className="nav-link" to="/create-post">Create Post</Link>
+            </li>
+            <li className="nav-item mx-3">
+              <Link className="nav-link" to="/">Cake Recipe</Link>
             </li>
           </ul>
         </div>
