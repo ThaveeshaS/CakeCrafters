@@ -10,6 +10,10 @@ import Footer from './components/Footer';
 import CakeRecipe from './pages/CakeRecipe/CakeRecipe';
 import CreateRecipe from './pages/CakeRecipe/CreateRecipe';
 
+
+import DecorationTips from './pages/DecoratingTips/DecoratingTips';
+import CreateDecoration from './pages/DecoratingTips/CreateDecorating';
+
 function App() {
   return (
     <Router>
@@ -24,6 +28,9 @@ function App() {
 
             <Route path="/cakerecipe" element={<CakeRecipe />} />
             <Route path="/createrecipe" element={<CreateRecipe />} />
+
+            <Route path="/decoration-tips" element={<DecorationTips />} />
+            <Route path="/create-decorating" element={<CreateDecoration/>} />
           </Routes>
         </div>
         <Footer />
