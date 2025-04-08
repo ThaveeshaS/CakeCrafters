@@ -100,6 +100,17 @@ const DecorationTips = () => {
     ));
   };
 
+  // Placeholder functions for dropdown actions
+  const handleEdit = (tipId) => {
+    console.log(`Edit tip with ID: ${tipId}`);
+    // Add navigation or logic to edit the tip
+  };
+
+  const handleDelete = (tipId) => {
+    setTips(tips.filter(tip => tip.id !== tipId));
+    console.log(`Deleted tip with ID: ${tipId}`);
+  };
+
   return (
     <div className="container py-5">
       {/* Create Tip Button - Top Right */}
@@ -118,7 +129,7 @@ const DecorationTips = () => {
           ) : (
             tips.map((tip) => (
               <div key={tip.id} className="card shadow-sm mb-4 overflow-hidden">
-                {/* Post Header with user info */}
+                {/* Post Header with user info and three dots */}
                 <div className="card-header bg-white border-0 py-3">
                   <div className="d-flex align-items-center">
                     <div className="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center" style={{ width: "45px", height: "45px" }}>
@@ -128,14 +139,38 @@ const DecorationTips = () => {
                       <h6 className="fw-bold mb-0">{tip.author}</h6>
                       <small className="text-muted">{tip.date}</small>
                     </div>
-                    <div className="ms-auto">
-                      <div className="d-flex gap-2">
+                    <div className="ms-auto d-flex align-items-center">
+                      <div className="d-flex gap-2 me-3">
                         <span className="badge bg-primary rounded-pill px-3 py-2">
                           {tip.category}
                         </span>
                         <span className="badge bg-warning text-dark rounded-pill px-3 py-2">
                           {tip.difficulty}
                         </span>
+                      </div>
+                      {/* Three Dots Dropdown */}
+                      <div className="dropdown">
+                        <button
+                          className="btn btn-link text-dark p-0"
+                          type="button"
+                          id={`dropdownMenuButton-${tip.id}`}
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          <i className="bi bi-three-dots fs-4"></i>
+                        </button>
+                        <ul className="dropdown-menu dropdown-menu-end" aria-labelledby={`dropdownMenuButton-${tip.id}`}>
+                          <li>
+                            <button className="dropdown-item" onClick={() => handleEdit(tip.id)}>
+                              <i className="bi bi-pencil me-2"></i> Edit
+                            </button>
+                          </li>
+                          <li>
+                            <button className="dropdown-item text-danger" onClick={() => handleDelete(tip.id)}>
+                              <i className="bi bi-trash me-2"></i> Delete
+                            </button>
+                          </li>
+                        </ul>
                       </div>
                     </div>
                   </div>
@@ -158,7 +193,7 @@ const DecorationTips = () => {
                     </div>
                   )}
                   
-                  {/* Post Actions - MOVED BELOW TIPS SECTION */}
+                  {/* Post Actions - Like and Comment Buttons */}
                   <div className="d-flex mb-2 mt-3 border-top pt-3">
                     <button 
                       className={`btn ${tip.isLiked ? 'text-danger' : 'text-dark'}`}
