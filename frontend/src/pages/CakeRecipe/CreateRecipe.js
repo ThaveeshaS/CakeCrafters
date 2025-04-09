@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const CreateRecipeForm = () => {
   const [formData, setFormData] = useState({
@@ -11,15 +13,15 @@ const CreateRecipeForm = () => {
     prepTime: '',
     cookTime: '',
     servings: '',
-    servingSize: '',
     ingredients: '',
     instructions: '',
-    date: new Date().toLocaleDateString('en-US')
+    date: new Date().toISOString().split('T')[0]
   });
 
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cakeTypes = [
     'Birthday cake',
@@ -29,30 +31,61 @@ const CreateRecipeForm = () => {
     'Butter cake'
   ];
 
+  // Clean up object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
+    };
+  }, [imagePreviews]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      const selectedFiles = imageFiles.slice(0, 4 - images.length);
+      
+      const previews = selectedFiles.map(file => URL.createObjectURL(file));
+      setImages([...images, ...selectedFiles]);
+      setImagePreviews([...imagePreviews, ...previews]);
+    }
+  };
+
+  const removeImage = (index) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+    const newImages = [...images];
+    const newPreviews = [...imagePreviews];
+    newImages.splice(index, 1);
+    newPreviews.splice(index, 1);
+    setImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
+  const handleDragEvents = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleDragEnter = (e) => {
-    e.preventDefault();
+    handleDragEvents(e);
     setIsDragging(true);
   };
 
   const handleDragLeave = (e) => {
-    e.preventDefault();
+    handleDragEvents(e);
     setIsDragging(false);
   };
 
   const handleDragOver = (e) => {
-    e.preventDefault();
+    handleDragEvents(e);
   };
 
   const handleDrop = (e) => {
-    e.preventDefault();
+    handleDragEvents(e);
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -60,46 +93,49 @@ const CreateRecipeForm = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      
-      // Filter only image files
-      const imageFiles = files.filter(file => file.type.startsWith('image/'));
-      
-      // Limit to 4 images
-      const selectedFiles = imageFiles.slice(0, 4 - images.length);
-      
-      // Create previews
-      const previews = selectedFiles.map(file => URL.createObjectURL(file));
-      
-      setImages([...images, ...selectedFiles]);
-      setImagePreviews([...imagePreviews, ...previews]);
-    }
-  };
-
-  const removeImage = (index) => {
-    const newImages = [...images];
-    const newPreviews = [...imagePreviews];
-    
-    // Revoke the object URL to avoid memory leaks
-    URL.revokeObjectURL(newPreviews[index]);
-    
-    newImages.splice(index, 1);
-    newPreviews.splice(index, 1);
-    
-    setImages(newImages);
-    setImagePreviews(newPreviews);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const formDataWithImages = {
-      ...formData,
-      images: images
-    };
-    console.log('Form submitted:', formDataWithImages);
-    // Here you would typically send data to your backend
+    setIsSubmitting(true);
+  
+    try {
+      const form = new FormData();
+      form.append("recipe", JSON.stringify(formData));
+      images.forEach((image) => form.append("images", image));
+  
+      const response = await fetch("http://localhost:8080/api/recipes/create", {
+        method: "POST",
+        body: form,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create recipe');
+      }
+  
+      toast.success("Recipe created successfully!");
+      
+      // Reset form completely
+      setFormData({
+        authorName: '',
+        cakeName: '',
+        subTitle: '',
+        cakeType: '',
+        skillLevel: '',
+        prepTime: '',
+        cookTime: '',
+        servings: '',
+        ingredients: '',
+        instructions: '',
+        date: new Date().toISOString().split('T')[0]
+      });
+      setImages([]);
+      setImagePreviews([]);
+  
+    } catch (error) {
+      toast.error(error.message || 'Submission failed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -154,6 +190,12 @@ const CreateRecipeForm = () => {
             transform: translateY(-2px);
           }
           
+          .submit-btn:disabled {
+            background: #cccccc;
+            transform: none;
+            cursor: not-allowed;
+          }
+          
           .form-control:focus, .form-select:focus {
             border-color: #2a5bd7;
             box-shadow: 0 0 0 0.25rem rgba(42, 91, 215, 0.25);
@@ -163,7 +205,7 @@ const CreateRecipeForm = () => {
             min-height: 120px;
           }
 
-          /* New Image Upload Styles */
+          /* Image Upload Styles */
           .upload-area {
             border: 2px dashed ${isDragging ? '#2a5bd7' : '#d3d3d3'};
             border-radius: 10px;
@@ -337,6 +379,7 @@ const CreateRecipeForm = () => {
                 name="cakeType"
                 value={formData.cakeType}
                 onChange={handleChange}
+                required
               >
                 <option value="">Select cake type</option>
                 {cakeTypes.map((type) => (
@@ -352,6 +395,7 @@ const CreateRecipeForm = () => {
                 name="skillLevel"
                 value={formData.skillLevel}
                 onChange={handleChange}
+                required
               >
                 <option value="">Select level</option>
                 <option value="Beginner">Beginner</option>
@@ -372,6 +416,7 @@ const CreateRecipeForm = () => {
                 placeholder="e.g. 30 mins"
                 value={formData.prepTime}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="col-md-4 mb-3">
@@ -384,6 +429,7 @@ const CreateRecipeForm = () => {
                 placeholder="e.g. 1 hour"
                 value={formData.cookTime}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="col-md-4 mb-3">
@@ -393,14 +439,16 @@ const CreateRecipeForm = () => {
                 className="form-control" 
                 id="servings" 
                 name="servings"
+                min="1"
                 value={formData.servings}
                 onChange={handleChange}
+                required
               />
             </div>
           </div>
         </div>
 
-        {/* Updated Image Upload Section */}
+        {/* Image Upload Section */}
         <div className="form-section">
           <h3>Cake Images</h3>
           <div 
@@ -481,6 +529,7 @@ const CreateRecipeForm = () => {
                 1 cup milk
                 ..."
               rows="6"
+              required
             />
           </div>
         </div>
@@ -503,6 +552,7 @@ const CreateRecipeForm = () => {
                 3. Add wet ingredients and mix well
                 ..."
               rows="8"
+              required
             />
           </div>
         </div>
@@ -511,8 +561,12 @@ const CreateRecipeForm = () => {
           <div className="text-muted">
             <small>Date: {formData.date}</small>
           </div>
-          <button type="submit" className="btn submit-btn text-white">
-            Add Cake Recipe
+          <button 
+            type="submit" 
+            className="btn submit-btn text-white"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Add Cake Recipe'}
           </button>
         </div>
       </form>
