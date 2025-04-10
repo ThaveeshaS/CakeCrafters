@@ -13,6 +13,7 @@ import CreateRecipe from './pages/CakeRecipe/CreateRecipe';
 
 import DecorationTips from './pages/DecoratingTips/DecoratingTips';
 import CreateDecoration from './pages/DecoratingTips/CreateDecorating';
+import EditDecoration from './pages/DecoratingTips/EditDecoration';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
 
             <Route path="/decoration-tips" element={<DecorationTips />} />
             <Route path="/create-decorating" element={<CreateDecoration/>} />
+            <Route path="/edit-decoration/:id" element={<EditDecoration />} />
           </Routes>
         </div>
         <Footer />

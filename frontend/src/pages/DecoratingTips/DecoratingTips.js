@@ -9,7 +9,6 @@ const DecorationTips = () => {
   const [newComments, setNewComments] = useState({});
   const [showComments, setShowComments] = useState({});
 
-  // Fetch tips from backend on mount
   useEffect(() => {
     fetch('http://localhost:8080/api/decoration-tips')
       .then((res) => res.json())
@@ -84,12 +83,10 @@ const DecorationTips = () => {
       .catch(error => console.error('Error deleting tip:', error));
   };
 
-  // Edit placeholder (add later)
   const handleEdit = (tipId) => {
-    console.log(`Edit tip with ID: ${tipId}`);
+    navigate(`/edit-decoration/${tipId}`); // Navigate to edit page with tip ID
   };
 
-  // Rest of your existing JSX remains the same
   return (
     <div className="container py-5">
       <div className="d-flex justify-content-end mb-4">
