@@ -1,48 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const DecorationTips = () => {
   const navigate = useNavigate();
+  const [tips, setTips] = useState([]);
+  const [newComments, setNewComments] = useState({});
+  const [showComments, setShowComments] = useState({});
 
-  // Sample decorating tips data with added likes and comments
-  const initialTips = [
-    {
-      id: 1,
-      title: "Perfect Buttercream Piping",
-      author: "Decorator Anna",
-      date: "2023-07-10",
-      category: "Piping",
-      difficulty: "Intermediate",
-      description: "Learn to create smooth, consistent buttercream swirls using a star tip.",
-      mediaUrl: "https://via.placeholder.com/500x300", // Larger placeholder image
-      tips: "Chill your piping bag for better control.",
-      likes: 42,
-      isLiked: false,
-      comments: []
-    },
-    {
-      id: 2,
-      title: "Fondant Flower Sculpting",
-      author: "Baker Lisa",
-      date: "2023-08-05",
-      category: "Fondant",
-      difficulty: "Advanced",
-      description: "Master the art of shaping delicate fondant flowers for cake toppers.",
-      mediaUrl: "https://via.placeholder.com/500x300", // Larger placeholder image
-      tips: "Use cornstarch to prevent sticking.",
-      likes: 87,
-      isLiked: false,
-      comments: []
-    }
-  ];
+  // Fetch tips from backend on mount
+  useEffect(() => {
+    fetch('http://localhost:8080/api/decoration-tips')
+      .then((res) => res.json())
+      .then((data) => {
+        setTips(
+          data.map((tip) => ({
+            id: tip.id,
+            title: tip.title,
+            author: tip.author,
+            date: new Date(tip.createdAt).toLocaleDateString('en-US'),
+            category: tip.category,
+            difficulty: tip.difficulty,
+            description: tip.description,
+            mediaUrl: tip.mediaUrls[0] || 'https://via.placeholder.com/500x300',
+            likes: 0, // Add likes endpoint later
+            isLiked: false,
+            comments: [], // Add comments endpoint later
+          }))
+        );
+      })
+      .catch((error) => console.error('Error fetching tips:', error));
+  }, []);
 
-  const [tips, setTips] = useState(initialTips);
-  const [newComments, setNewComments] = useState({}); // Tracks input for new comments per tip
-  const [showComments, setShowComments] = useState({}); // Tracks which posts have expanded comments
-
-  // Handle Like button click
   const handleLike = (tipId) => {
     setTips(tips.map(tip =>
       tip.id === tipId ? { 
@@ -53,12 +43,10 @@ const DecorationTips = () => {
     ));
   };
 
-  // Handle comment input change
   const handleCommentChange = (tipId, value) => {
     setNewComments({ ...newComments, [tipId]: value });
   };
 
-  // Handle comment submission
   const handleCommentSubmit = (tipId, e) => {
     e.preventDefault();
     const commentText = newComments[tipId]?.trim();
@@ -70,28 +58,18 @@ const DecorationTips = () => {
             ...tip,
             comments: [
               ...tip.comments,
-              {
-                id: Date.now(), // Simple unique ID
-                text: commentText,
-                author: "Current User", // Placeholder; replace with actual user data
-                date: new Date().toLocaleDateString('en-US')
-              }
+              { id: Date.now(), text: commentText, author: "Current User", date: new Date().toLocaleDateString('en-US') }
             ]
           }
         : tip
     ));
-    setNewComments({ ...newComments, [tipId]: '' }); // Clear input
+    setNewComments({ ...newComments, [tipId]: '' });
   };
 
-  // Toggle comments visibility
   const toggleComments = (tipId) => {
-    setShowComments({
-      ...showComments,
-      [tipId]: !showComments[tipId]
-    });
+    setShowComments({ ...showComments, [tipId]: !showComments[tipId] });
   };
 
-  // Handle comment deletion
   const handleDeleteComment = (tipId, commentId) => {
     setTips(tips.map(tip =>
       tip.id === tipId
@@ -100,36 +78,33 @@ const DecorationTips = () => {
     ));
   };
 
-  // Placeholder functions for dropdown actions
+  const handleDelete = (tipId) => {
+    fetch(`http://localhost:8080/api/decoration-tips/${tipId}`, { method: 'DELETE' })
+      .then(() => setTips(tips.filter(tip => tip.id !== tipId)))
+      .catch(error => console.error('Error deleting tip:', error));
+  };
+
+  // Edit placeholder (add later)
   const handleEdit = (tipId) => {
     console.log(`Edit tip with ID: ${tipId}`);
-    // Add navigation or logic to edit the tip
   };
 
-  const handleDelete = (tipId) => {
-    setTips(tips.filter(tip => tip.id !== tipId));
-    console.log(`Deleted tip with ID: ${tipId}`);
-  };
-
+  // Rest of your existing JSX remains the same
   return (
     <div className="container py-5">
-      {/* Create Tip Button - Top Right */}
       <div className="d-flex justify-content-end mb-4">
         <Link to="/create-decorating" className="btn btn-primary rounded-pill">
           <i className="bi bi-plus-circle me-2"></i> Create Decorating Tip
         </Link>
       </div>
-
       <div className="row">
         <div className="col-lg-8 mx-auto">
           <h1 className="display-5 text-center mb-4">Cake Decorating Tips</h1>
-
           {tips.length === 0 ? (
             <p className="text-center">No decorating tips available yet.</p>
           ) : (
             tips.map((tip) => (
               <div key={tip.id} className="card shadow-sm mb-4 overflow-hidden">
-                {/* Post Header with user info and three dots */}
                 <div className="card-header bg-white border-0 py-3">
                   <div className="d-flex align-items-center">
                     <div className="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center" style={{ width: "45px", height: "45px" }}>
@@ -141,88 +116,42 @@ const DecorationTips = () => {
                     </div>
                     <div className="ms-auto d-flex align-items-center">
                       <div className="d-flex gap-2 me-3">
-                        <span className="badge bg-primary rounded-pill px-3 py-2">
-                          {tip.category}
-                        </span>
-                        <span className="badge bg-warning text-dark rounded-pill px-3 py-2">
-                          {tip.difficulty}
-                        </span>
+                        <span className="badge bg-primary rounded-pill px-3 py-2">{tip.category}</span>
+                        <span className="badge bg-warning text-dark rounded-pill px-3 py-2">{tip.difficulty}</span>
                       </div>
-                      {/* Three Dots Dropdown */}
                       <div className="dropdown">
-                        <button
-                          className="btn btn-link text-dark p-0"
-                          type="button"
-                          id={`dropdownMenuButton-${tip.id}`}
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
-                        >
+                        <button className="btn btn-link text-dark p-0" type="button" id={`dropdownMenuButton-${tip.id}`} data-bs-toggle="dropdown" aria-expanded="false">
                           <i className="bi bi-three-dots fs-4"></i>
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end" aria-labelledby={`dropdownMenuButton-${tip.id}`}>
-                          <li>
-                            <button className="dropdown-item" onClick={() => handleEdit(tip.id)}>
-                              <i className="bi bi-pencil me-2"></i> Edit
-                            </button>
-                          </li>
-                          <li>
-                            <button className="dropdown-item text-danger" onClick={() => handleDelete(tip.id)}>
-                              <i className="bi bi-trash me-2"></i> Delete
-                            </button>
-                          </li>
+                          <li><button className="dropdown-item" onClick={() => handleEdit(tip.id)}><i className="bi bi-pencil me-2"></i> Edit</button></li>
+                          <li><button className="dropdown-item text-danger" onClick={() => handleDelete(tip.id)}><i className="bi bi-trash me-2"></i> Delete</button></li>
                         </ul>
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                {/* Post Media */}
-                {tip.mediaUrl && (
-                  <img src={tip.mediaUrl} alt={tip.title} className="card-img-top" />
-                )}
-                
-                {/* Post Content */}
+                {tip.mediaUrl && <img src={tip.mediaUrl} alt={tip.title} className="card-img-top" />}
                 <div className="card-body">
-                  {/* Post Content */}
                   <h5 className="fw-bold mb-2">{tip.title}</h5>
                   <p>{tip.description}</p>
-                  
-                  {tip.tips && (
-                    <div className="alert alert-info">
-                      <i className="bi bi-lightbulb-fill me-2"></i> <strong>Pro Tip:</strong> {tip.tips}
-                    </div>
-                  )}
-                  
-                  {/* Post Actions - Like and Comment Buttons */}
                   <div className="d-flex mb-2 mt-3 border-top pt-3">
-                    <button 
-                      className={`btn ${tip.isLiked ? 'text-danger' : 'text-dark'}`}
-                      onClick={() => handleLike(tip.id)}
-                    >
+                    <button className={`btn ${tip.isLiked ? 'text-danger' : 'text-dark'}`} onClick={() => handleLike(tip.id)}>
                       <i className={`bi ${tip.isLiked ? 'bi-heart-fill' : 'bi-heart'} fs-4`}></i>
                       <span className="ms-2">{tip.likes} likes</span>
                     </button>
-                    <button 
-                      className="btn text-dark ms-3"
-                      onClick={() => toggleComments(tip.id)}
-                    >
+                    <button className="btn text-dark ms-3" onClick={() => toggleComments(tip.id)}>
                       <i className="bi bi-chat fs-4"></i>
                       <span className="ms-2">{tip.comments.length} comments</span>
                     </button>
                   </div>
-                  
-                  {/* Comments Section */}
                   <div className="mt-3">
                     <div className="d-flex justify-content-between">
                       <h6 className="mb-3">Comments</h6>
-                      <button 
-                        className="btn btn-sm text-primary p-0"
-                        onClick={() => toggleComments(tip.id)}
-                      >
+                      <button className="btn btn-sm text-primary p-0" onClick={() => toggleComments(tip.id)}>
                         {showComments[tip.id] ? 'Hide comments' : 'Show comments'}
                       </button>
                     </div>
-                    
                     {showComments[tip.id] && (
                       <>
                         {tip.comments.length === 0 ? (
@@ -240,31 +169,15 @@ const DecorationTips = () => {
                                     <small className="text-muted">{comment.date}</small>
                                   </div>
                                   <p className="mb-1">{comment.text}</p>
-                                  <div className="d-flex align-items-center">
-                                    <button className="btn btn-sm text-dark p-0 me-3">
-                                      <small>Like</small>
-                                    </button>
-                                    <button className="btn btn-sm text-dark p-0">
-                                      <small>Reply</small>
-                                    </button>
-                                    <button
-                                      className="btn btn-sm text-danger p-0 ms-auto"
-                                      onClick={() => handleDeleteComment(tip.id, comment.id)}
-                                    >
-                                      <small><i className="bi bi-trash"></i></small>
-                                    </button>
-                                  </div>
+                                  <button className="btn btn-sm text-danger p-0 ms-auto" onClick={() => handleDeleteComment(tip.id, comment.id)}>
+                                    <small><i className="bi bi-trash"></i></small>
+                                  </button>
                                 </div>
                               </div>
                             ))}
                           </div>
                         )}
-                        
-                        {/* Comment Form */}
-                        <form 
-                          onSubmit={(e) => handleCommentSubmit(tip.id, e)} 
-                          className="d-flex align-items-center mb-2"
-                        >
+                        <form onSubmit={(e) => handleCommentSubmit(tip.id, e)} className="d-flex align-items-center mb-2">
                           <div className="rounded-circle bg-light d-flex justify-content-center align-items-center me-2" style={{ width: "32px", height: "32px", flexShrink: 0 }}>
                             <i className="bi bi-person-fill"></i>
                           </div>
@@ -288,7 +201,6 @@ const DecorationTips = () => {
               </div>
             ))
           )}
-
           <div className="d-flex justify-content-between mt-4">
             <button className="btn btn-outline-primary rounded-pill" onClick={() => navigate("/")}>
               <i className="bi bi-arrow-left"></i> Back to Home

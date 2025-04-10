@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const CreateDecoration = () => {
+  const navigate = useNavigate(); // Hook for navigation
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -30,10 +31,31 @@ const CreateDecoration = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Decoration Tip Submitted:', formData);
-    // Add backend submission logic here later
+    const tipData = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      difficulty: formData.difficulty,
+      mediaUrls: formData.media ? [formData.media] : [],
+      author: formData.author,
+      createdAt: new Date().toISOString(),
+    };
+    try {
+      const response = await fetch('http://localhost:8080/api/decoration-tips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tipData),
+      });
+      if (response.ok) {
+        navigate('/decoration-tips');
+      } else {
+        console.error('Failed to create tip');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
